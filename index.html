@@ -176,7 +176,7 @@
       resultBox.innerText = "⏳ 正在分析八字信息，请稍候...\n\n这可能需要几秒钟时间来计算您的命理信息和择吉推荐。";
 
       // 发送请求到后端
-      fetch('/analyze', {
+      fetch('./main_fixed/analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
