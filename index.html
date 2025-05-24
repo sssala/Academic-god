@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>八字择吉任务推荐</title>
+  <style>
+    body {
+      font-family: 'Microsoft YaHei', Arial, sans-serif;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      margin: 0;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+      font-size: 2.5em;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #555;
+      font-size: 1.1em;
+    }
+    
+    input, select, button {
+      padding: 12px;
+      font-size: 16px;
+      width: 100%;
+      max-width: 400px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+    
+    input:focus, select:focus {
+      border-color: #667eea;
+      outline: none;
+      box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+    }
+    
+    button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 1.2em;
+      margin-top: 20px;
+      transition: transform 0.2s ease;
+    }
+    
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    button:active {
+      transform: translateY(0);
+    }
+    
+    #result {
+      margin-top: 30px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.8;
+      background: #f8f9fa;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+      border-left: 5px solid #667eea;
+      font-family: 'Courier New', monospace;
+      line-height: 1.6;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+    
+    .loading {
+      text-align: center;
+      color: #667eea;
+      font-size: 1.2em;
+    }
+    
+    .error {
+      color: #e74c3c;
+      background: #fdf2f2;
+      border-left-color: #e74c3c;
+    }
+    
+    .success {
+      color: #27ae60;
+    }
+    
+    .highlight {
+      background: #fff3cd;
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔮 Academic god</h1>
+
+    <div class="form-group">
+      <label for="birth">📅 出生日期时间</label>
+      <input type="datetime-local" id="birth" />
+    </div>
+
+    <div class="form-group">
+      <label for="gender">👤 性别</label>
+      <select id="gender">
+        <option value="1">男</option>
+        <option value="0">女</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="task">📝 任务类型</label>
+      <select id="task">
+        <option value="投稿">📄 投稿</option>
+        <option value="返修">✏️ 返修</option>
+        <option value="盲审">👁️ 盲审</option>
+        <option value="答辩">🎓 答辩</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="days">📊 分析天数（1-365天）</label>
+      <input type="number" id="days" min="1" max="365" value="30" />
+    </div>
+
+    <button onclick="submitForm()">🚀 开始分析</button>
+
+    <div id="result"></div>
+  </div>
+
+  <script>
+    function submitForm() {
+      const birth = document.getElementById('birth').value;
+      const gender = document.getElementById('gender').value;
+      const task = document.getElementById('task').value;
+      const days = parseInt(document.getElementById('days').value);
+
+      // 输入验证
+      if (!birth) {
+        alert("⚠️ 请输入出生日期和时间！");
+        return;
+      }
+
+      if (days < 1 || days > 365) {
+        alert("⚠️ 分析天数必须在1-365之间！");
+        return;
+      }
+
+      const resultBox = document.getElementById('result');
+      resultBox.className = 'loading';
+      resultBox.innerText = "⏳ 正在分析八字信息，请稍候...\n\n这可能需要几秒钟时间来计算您的命理信息和择吉推荐。";
+
+      // 发送请求到后端
+      fetch('/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          birth_datetime: birth,
+          gender: gender,
+          task: task,
+          days: days,
+          current_time: new Date().toISOString()
+        })
+      })
+      .then(async response => {
+        const text = await response.text();
+        console.log('服务器响应:', text);
+        
+        try {
+          const data = JSON.parse(text);
+          
+          if (data.status === 'success') {
+            resultBox.className = 'success';
+
+            // 格式化输出结果
+            let formattedResult = "";
+            formattedResult += "=" * 50 + "\n\n";
+            
+            data.prints.forEach(line => {
+              // 添加一些格式化
+              if (line.includes('🎯') || line.includes('📅')) {
+                formattedResult += "\n" + line + "\n";
+              } else if (line.includes('【') && line.includes('】')) {
+                formattedResult += "\n" + line + "\n";
+              } else {
+                formattedResult += line + "\n";
+              }
+            });
+            
+            resultBox.innerText = formattedResult;
+            // 如果有学术/事业星曜
+            if (data.data && data.data.current_dayun && data.data.current_dayun.xingyao && data.data.current_dayun.xingyao.length > 0) {
+              const xingyaoList = data.data.current_dayun.xingyao;
+              resultBox.innerText += "\n\n🎓 学术/事业星曜提示:\n";
+              xingyaoList.forEach(x => {
+                resultBox.innerText += `【${x.period}】出现金曜【${x.star}】：${x.meaning}\n`;
+                resultBox.innerText += `说明：${x.period_explanation}\n`;
+              });
+            } else {
+              resultBox.innerText += "\n\n⚠️ 当前阶段暂无对学术/事业有利的星曜提示\n";
+            }
+
+
+            
+            // 添加数据摘要
+            if (data.data && data.data.qiangruo) {
+              const summary = data.data.qiangruo;
+              resultBox.innerText += "\n\n📋 分析摘要:\n";
+              resultBox.innerText += `日主: ${summary.日主} (${summary.五行})\n`;
+              resultBox.innerText += `强弱: ${summary.日主强弱}\n`;
+              resultBox.innerText += `用神: ${summary.用神.join(', ')}\n`;
+              resultBox.innerText += `忌神: ${summary.忌神建议.join(', ')}\n`;
+            }
+            
+          } else {
+            resultBox.className = 'error';
+            resultBox.innerText = "❌ 分析失败：" + (data.message || '未知错误');
+            
+            if (data.traceback) {
+              resultBox.innerText += "\n\n详细错误信息:\n" + data.traceback;
+            }
+          }
+          
+        } catch (parseError) {
+          resultBox.className = 'error';
+          resultBox.innerText = "❌ 服务器返回数据格式错误\n\n原始响应:\n" + text;
+          console.error('JSON解析错误:', parseError);
+        }
+      })
+      .catch(error => {
+        resultBox.className = 'error';
+        resultBox.innerText = "❌ 网络请求失败: " + error.message + "\n\n请检查:\n1. 服务器是否正在运行\n2. 网络连接是否正常\n3. 防火墙设置";
+        console.error('请求错误:', error);
+      });
+    }
+
+    // 页面加载时设置默认值
+    window.onload = function() {
+      // 设置默认出生时间为1990年1月1日12:00
+      const defaultDate = new Date('1990-01-01T12:00');
+      const dateString = defaultDate.toISOString().slice(0, 16);
+      document.getElementById('birth').value = dateString;
+    };
+  </script>
+</body>
+</html>
